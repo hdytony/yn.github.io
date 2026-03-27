@@ -1096,7 +1096,7 @@
 </div>
 
 <!-- HERO -->
-<section class="hero">
+<section id="hero" class="hero">
   <div class="container">
     <div class="hero-grid">
       <div>
@@ -1151,7 +1151,7 @@
 </div>
 
 <!-- STRATEGY SECTION -->
-<section class="section">
+<section id="strategy" class="section">
   <div class="container">
     <div class="section-header">
       <p class="section-label">Investment Strategy</p>
@@ -1233,7 +1233,7 @@
 </section>
 
 <!-- ADVANTAGES -->
-<section class="section section-alt">
+<section id="advantages" class="section section-alt">
   <div class="container">
     <div class="section-header">
       <p class="section-label">Key Advantages</p>
@@ -1266,7 +1266,7 @@
 </section>
 
 <!-- MANAGER SECTION -->
-<section class="manager-section">
+<section id="manager" class="manager-section">
   <div class="container">
     <div class="manager-grid">
       <!-- Card -->
@@ -1448,7 +1448,7 @@
 </section>
 
 <!-- COMPARE SECTION -->
-<section class="section">
+<section id="compare" class="section">
   <div class="container">
     <div class="section-header">
       <p class="section-label">Comparison</p>
@@ -1511,7 +1511,7 @@
 </section>
 
 <!-- FUND SPECS -->
-<section class="section section-alt">
+<section id="specs" class="section section-alt">
   <div class="container">
     <div class="section-header">
       <p class="section-label">Fund Details</p>
@@ -1587,7 +1587,7 @@
 </section>
 
 <!-- SUBSCRIPTION CTA -->
-<section class="sub-section">
+<section id="subscribe" class="sub-section">
   <div class="container">
     <div class="sub-grid">
       <div class="sub-content">
@@ -1675,3 +1675,267 @@
 
 </body>
 </html>
+
+<!-- ===== STICKY NAV ===== -->
+<nav class="sticky-nav" id="stickyNav">
+  <div class="sticky-nav-inner">
+    <div class="snav-logo">00403A</div>
+    <div class="snav-links">
+      <a class="snav-link" href="#strategy">策略</a>
+      <a class="snav-link" href="#advantages">優勢</a>
+      <a class="snav-link" href="#manager">經理人</a>
+      <a class="snav-link" href="#compare">比較</a>
+      <a class="snav-link" href="#specs">規格</a>
+    </div>
+    <a class="snav-cta" href="#subscribe">立即申購</a>
+  </div>
+</nav>
+
+<!-- ===== FLOATING CTA ===== -->
+<a class="fab-cta" id="fabCta" href="#subscribe">
+  <span class="fab-icon">✦</span>
+  <span class="fab-text">立即申購</span>
+</a>
+
+<!-- ===== BACK TO TOP ===== -->
+<button class="back-top" id="backTop" aria-label="回頂端">↑</button>
+
+<style>
+.sticky-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 999;
+  background: rgba(11,31,58,0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(201,148,26,0.25);
+  transform: translateY(-100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  padding-left: env(safe-area-inset-left,0);
+  padding-right: env(safe-area-inset-right,0);
+}
+.sticky-nav.visible { transform: translateY(0); }
+.sticky-nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 18px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.snav-logo {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--gold-light);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.snav-links {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.snav-links::-webkit-scrollbar { display: none; }
+.snav-link {
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.snav-link:hover,
+.snav-link.active { color: var(--gold-light); background: rgba(201,148,26,0.1); }
+.snav-cta {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--gold);
+  padding: 7px 14px;
+  border-radius: 20px;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.snav-cta:hover { background: var(--gold-light); transform: scale(1.04); }
+
+.fab-cta {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 11px 20px;
+  border-radius: 28px;
+  text-decoration: none;
+  box-shadow: 0 6px 24px rgba(201,148,26,0.45);
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  transition: opacity 0.35s, transform 0.35s, background 0.2s;
+  pointer-events: none;
+  letter-spacing: 0.3px;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab-cta.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  animation: fab-pulse 2.4s ease-in-out infinite;
+}
+.fab-cta:hover { background: var(--gold-light); }
+@keyframes fab-pulse {
+  0%,100% { box-shadow: 0 6px 24px rgba(201,148,26,0.45); }
+  50%      { box-shadow: 0 6px 36px rgba(201,148,26,0.8); }
+}
+.fab-icon { font-size: 10px; }
+
+.back-top {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  z-index: 997;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(11,31,58,0.88);
+  border: 1px solid rgba(201,148,26,0.4);
+  color: var(--gold-light);
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.3s, transform 0.3s, background 0.2s;
+  pointer-events: none;
+  -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.back-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.back-top:hover { background: var(--navy-light); }
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.65s cubic-bezier(0.4,0,0.2,1),
+              transform 0.65s cubic-bezier(0.4,0,0.2,1);
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+.fade-in.delay-1 { transition-delay: 0.12s; }
+.fade-in.delay-2 { transition-delay: 0.24s; }
+
+@media (max-width: 768px) {
+  .sticky-nav-inner { gap: 10px; }
+  .snav-logo { font-size: 12px; }
+  .snav-link { font-size: 11.5px; padding: 5px 8px; }
+  .snav-cta { font-size: 11px; padding: 6px 11px; }
+  .fab-cta { font-size: 12.5px; padding: 10px 18px; bottom: calc(64px + env(safe-area-inset-bottom,0px)); right: 16px; }
+  .back-top { width: 38px; height: 38px; font-size: 14px; right: 16px; }
+}
+</style>
+
+<script>
+(function(){
+  var hero    = document.getElementById('hero');
+  var nav     = document.getElementById('stickyNav');
+  var fab     = document.getElementById('fabCta');
+  var backTop = document.getElementById('backTop');
+
+  function onScroll(){
+    var y = window.scrollY || window.pageYOffset;
+    var threshold = hero ? hero.offsetHeight * 0.5 : 280;
+    nav.classList.toggle('visible', y > threshold);
+    fab.classList.toggle('visible', y > threshold + 200);
+    backTop.classList.toggle('visible', y > 600);
+
+    var ids = ['strategy','advantages','manager','compare','specs','subscribe'];
+    var active = '';
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el && el.getBoundingClientRect().top <= 80) active = id;
+    });
+    document.querySelectorAll('.snav-link').forEach(function(a){
+      a.classList.toggle('active', a.getAttribute('href') === '#'+active);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  backTop.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      var id = this.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if(!el) return;
+      e.preventDefault();
+      var top = el.getBoundingClientRect().top + (window.scrollY||window.pageYOffset) - 58;
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    });
+  });
+
+  // Fade-in observer
+  var fadeTargets = document.querySelectorAll(
+    '.section-header,.strategy-card,.adv-card,.spec-box,' +
+    '.manager-card,.manager-content,.chart-box,.compare-table-wrapper,' +
+    '.flow-section,.sub-cta-box,.sub-content,.number-item,.timeline-item'
+  );
+  fadeTargets.forEach(function(el, i){
+    el.classList.add('fade-in');
+    if(i%3===1) el.classList.add('delay-1');
+    if(i%3===2) el.classList.add('delay-2');
+  });
+  var fadeObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('visible'); fadeObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  fadeTargets.forEach(function(el){ fadeObs.observe(el); });
+
+  // Counter animation
+  var countObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting) return;
+      var el = entry.target;
+      var raw = el.textContent.trim();
+      var m = raw.match(/([+]?)([\d,]+\.?\d*)(.*)/);
+      if(!m) return;
+      var prefix = m[1];
+      var num = parseFloat(m[2].replace(/,/g,''));
+      var suffix = m[3];
+      var decimals = m[2].indexOf('.')>=0 ? m[2].split('.')[1].length : 0;
+      var duration = 1000;
+      var startTs = null;
+      function tick(ts){
+        if(!startTs) startTs = ts;
+        var p = Math.min((ts-startTs)/duration, 1);
+        var eased = 1 - Math.pow(1-p, 3);
+        var val = (num * eased).toFixed(decimals);
+        el.textContent = prefix + val + suffix;
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+      countObs.unobserve(el);
+    });
+  }, { threshold: 0.6 });
+  document.querySelectorAll('.number-val,.stat-big,.chart-stat-val').forEach(function(el){
+    countObs.observe(el);
+  });
+})();
+</script>
