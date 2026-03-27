@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>00981A × 2330 × 0050 投資比較</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --c1: #6C5CE7;
+      --c2: #00B894;
+      --c3: #E17055;
+      --bg: #0F1117;
+      --card: #1A1D2E;
+      --card2: #222540;
+      --text: #E8EAF6;
+      --muted: #8892B0;
+      --border: rgba(255,255,255,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', '微軟正黑體', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #0F1117 0%, #1A1D2E 100%);
+      padding: 48px 24px 36px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(108,92,231,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(108,92,231,0.18);
+      border: 1px solid rgba(108,92,231,0.4);
+      color: #A29BFE;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+    header h1 {
+      font-size: clamp(24px, 6vw, 42px);
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 30%, #A29BFE 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    header p { color: var(--muted); font-size: 14px; }
+    header .date-range {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(0,184,148,0.12);
+      border: 1px solid rgba(0,184,148,0.3);
+      color: #55EFC4;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-tabs {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      flex: none;
+      padding: 14px 20px;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .nav-tab.active { color: var(--text); border-bottom-color: var(--c1); }
+    .nav-tab:hover { color: var(--text); }
+
+    main { max-width: 960px; margin: 0 auto; padding: 32px 16px 80px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    @media(max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } }
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .card-c1::before { background: var(--c1); }
+    .card-c2::before { background: var(--c2); }
+    .card-c3::before { background: var(--c3); }
+    .product-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .badge-c1 { background: rgba(108,92,231,0.2); color: #A29BFE; }
+    .badge-c2 { background: rgba(0,184,148,0.2); color: #55EFC4; }
+    .badge-c3 { background: rgba(225,112,85,0.2); color: #FAB1A0; }
+    .product-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .product-card .subtitle { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .metric-row:last-child { border-bottom: none; }
+    .metric-label { font-size: 12px; color: var(--muted); }
+    .metric-val { font-size: 14px; font-weight: 600; }
+    .green { color: #55EFC4; }
+    .red { color: #FF7675; }
+    .purple { color: #A29BFE; }
+    .orange { color: #FAB1A0; }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; min-width: 540px; }
+    th, td { padding: 14px 18px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+    thead tr { background: var(--card2); }
+    th { font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+    th:nth-child(2) { color: #A29BFE; }
+    th:nth-child(3) { color: #55EFC4; }
+    th:nth-child(4) { color: #FAB1A0; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody tr:last-child td { border-bottom: none; }
+    td:first-child { color: var(--muted); font-size: 12px; }
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-active { background: rgba(108,92,231,0.2); color: #A29BFE; }
+    .tag-passive { background: rgba(0,184,148,0.2); color: #55EFC4; }
+    .tag-stock { background: rgba(225,112,85,0.2); color: #FAB1A0; }
+    .tag-high { background: rgba(255,118,117,0.2); color: #FF7675; }
+    .tag-mid { background: rgba(253,203,110,0.2); color: #FDCB6E; }
+    .tag-low { background: rgba(85,239,196,0.2); color: #55EFC4; }
+
+    .chart-section { margin-bottom: 40px; }
+    .chart-header { margin-bottom: 20px; }
+    .chart-header h3 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .chart-header p { font-size: 13px; color: var(--muted); }
+    .chart-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 16px;
+    }
+    .chart-container { position: relative; width: 100%; }
+    .chart-btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .chart-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .chart-btn.active, .chart-btn:hover {
+      background: rgba(108,92,231,0.2);
+      border-color: rgba(108,92,231,0.5);
+      color: #A29BFE;
+    }
+    .legend-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      justify-content: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media(max-width: 600px) { .dual-grid { grid-template-columns: 1fr; } }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+    @media(max-width: 480px) { .score-grid { grid-template-columns: 1fr; } }
+    .score-card { background: var(--card2); border-radius: 12px; padding: 16px; text-align: center; }
+    .score-title { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .score-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 6px; height: 6px; margin-bottom: 6px; overflow: hidden; }
+    .score-bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; }
+    .score-num { font-size: 20px; font-weight: 700; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media(max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+    .summary-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+    }
+    .summary-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .summary-card ul { list-style: none; }
+    .summary-card ul li { font-size: 13px; color: var(--muted); padding: 5px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 8px; }
+    .summary-card ul li:last-child { border-bottom: none; }
+    .summary-card ul li::before { content: '→'; color: var(--c1); flex-shrink: 0; margin-top: 1px; }
+    .li-c2::before { color: var(--c2) !important; }
+    .li-c3::before { color: var(--c3) !important; }
+    .recommend-badge { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-top: 12px; }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title span { width: 4px; height: 22px; border-radius: 2px; display: inline-block; }
+
+    .split-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(253,203,110,0.12);
+      border: 1px solid rgba(253,203,110,0.3);
+      color: #FDCB6E;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .note { font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">投資比較分析</div>
+  <h1>00981A × 2330 × 0050</h1>
+  <p>主動式ETF × 台積電個股 × 指數型ETF ｜ 三商品深度比較</p>
+  <div class="date-range">📅 比較期間：2025/5/27（00981A掛牌）→ 2026/3/26</div>
+</header>
+
+<div class="nav-wrap">
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('overview')">商品總覽</button>
+    <button class="nav-tab" onclick="showSection('compare')">特色比較表</button>
+    <button class="nav-tab" onclick="showSection('performance')">績效圖表</button>
+    <button class="nav-tab" onclick="showSection('radar')">多維分析</button>
+    <button class="nav-tab" onclick="showSection('summary')">投資建議</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- ════════ SECTION 1: 商品總覽 ════════ -->
+  <div id="overview" class="section active">
+    <div class="section-title"><span style="background:var(--c1)"></span>商品總覽</div>
+
+    <div class="cards-grid">
+      <!-- 00981A -->
+      <div class="product-card card-c1">
+        <div class="product-badge badge-c1">主動式 ETF</div>
+        <h2 style="color:#A29BFE">00981A</h2>
+        <div class="subtitle">統一台股增長主動式</div>
+        <div class="metric-row"><span class="metric-label">發行商</span><span class="metric-val">統一投信</span></div>
+        <div class="metric-row"><span class="metric-label">掛牌日</span><span class="metric-val">2025/5/27</span></div>
+        <div class="metric-row"><span class="metric-label">收盤價（3/26）</span><span class="metric-val">20.92 元</span></div>
+        <div class="metric-row"><span class="metric-label">上市至今報酬</span><span class="metric-val green">+114.6%</span></div>
+        <div class="metric-row"><span class="metric-label">2026 年初至今</span><span class="metric-val green">+26.25%</span></div>
+        <div class="metric-row"><span class="metric-label">費用率</span><span class="metric-val red">1.49%</span></div>
+        <div class="metric-row"><span class="metric-label">配息頻率</span><span class="metric-val">季配息</span></div>
+      </div>
+
+      <!-- 2330 -->
+      <div class="product-card card-c2">
+        <div class="product-badge badge-c2">個股</div>
+        <h2 style="color:#55EFC4">2330</h2>
+        <div class="subtitle">台積電 TSMC</div>
+        <div class="metric-row"><span class="metric-label">產業</span><span class="metric-val">半導體製造</span></div>
+        <div class="metric-row"><span class="metric-label">比較起始點</span><span class="metric-val">2025/5/27</span></div>
+        <div class="metric-row"><span class="metric-label">收盤價（3/26）</span><span class="metric-val">1,845 元</span></div>
+        <div class="metric-row"><span class="metric-label">上市至今報酬</span><span class="metric-val green">+94.2%</span></div>
+        <div class="metric-row"><span class="metric-label">52週高/低</span><span class="metric-val">2,025 / 780</span></div>
+        <div class="metric-row"><span class="metric-label">現金殖利率</span><span class="metric-val">~1.81%</span></div>
+        <div class="metric-row"><span class="metric-label">配息頻率</span><span class="metric-val">季配息</span></div>
+      </div>
+
+      <!-- 0050 -->
+      <div class="product-card card-c3">
+        <div class="product-badge badge-c3">指數型 ETF</div>
+        <h2 style="color:#FAB1A0">0050</h2>
+        <div class="subtitle">元大台灣50 <span class="split-note">1拆4</span></div>
+        <div class="metric-row"><span class="metric-label">發行商</span><span class="metric-val">元大投信</span></div>
+        <div class="metric-row"><span class="metric-label">比較起始點</span><span class="metric-val">2025/5/27</span></div>
+        <div class="metric-row"><span class="metric-label">收盤價（3/26）</span><span class="metric-val">75.80 元</span></div>
+        <div class="metric-row"><span class="metric-label">上市至今報酬</span><span class="metric-val green">+61.3%</span></div>
+        <div class="metric-row"><span class="metric-label">2026 年初至今</span><span class="metric-val green">+16.57%</span></div>
+        <div class="metric-row"><span class="metric-label">費用率</span><span class="metric-val green">~0.20%</span></div>
+        <div class="metric-row"><span class="metric-label">配息頻率</span><span class="metric-val">半年配</span></div>
+      </div>
+    </div>
+
+    <!-- Highlights -->
+    <div class="chart-box">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center;">
+        <div>
+          <div style="font-size:32px;font-weight:800;color:#A29BFE;margin-bottom:4px;">+114.6%</div>
+          <div style="font-size:12px;color:var(--muted)">00981A・上市至今含息報酬</div>
+        </div>
+        <div style="border-left:1px solid var(--border);border-right:1px solid var(--border);">
+          <div style="font-size:32px;font-weight:800;color:#55EFC4;margin-bottom:4px;">+94.2%</div>
+          <div style="font-size:12px;color:var(--muted)">2330・同期估算報酬</div>
+        </div>
+        <div>
+          <div style="font-size:32px;font-weight:800;color:#FAB1A0;margin-bottom:4px;">+61.3%</div>
+          <div style="font-size:12px;color:var(--muted)">0050・同期報酬（1拆4後）</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:16px;">比較基準：2025/5/27（00981A掛牌日）至 2026/3/26｜2330 以同期估算數據，0050 已還原 2025/6 一拆四分割</p>
+    </div>
+  </div>
+
+  <!-- ════════ SECTION 2: 特色比較表 ════════ -->
+  <div id="compare" class="section">
+    <div class="section-title"><span style="background:var(--c1)"></span>特色比較表</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>比較項目</th>
+            <th>00981A</th>
+            <th>2330 台積電</th>
+            <th>0050</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>商品類型</td>
+            <td><span class="tag tag-active">主動式 ETF</span></td>
+            <td><span class="tag tag-stock">個股</span></td>
+            <td><span class="tag tag-passive">指數型 ETF</span></td>
+          </tr>
+          <tr>
+            <td>掛牌 / 起始</td>
+            <td>統一投信・2025/5/27</td>
+            <td>台積電・1994年</td>
+            <td>元大投信・2003年</td>
+          </tr>
+          <tr>
+            <td>收盤價（2026/3/26）</td>
+            <td style="color:#A29BFE;font-weight:600">20.92 元</td>
+            <td style="color:#55EFC4;font-weight:600">1,845 元</td>
+            <td style="color:#FAB1A0;font-weight:600">75.80 元 <span class="split-note">1拆4後</span></td>
+          </tr>
+          <tr>
+            <td>上市至今報酬<br><span style="font-size:10px;color:var(--muted)">(2025/5/27–2026/3/26)</span></td>
+            <td><span style="color:#55EFC4;font-weight:700">+114.6%</span></td>
+            <td><span style="color:#A29BFE;font-weight:700">+94.2%（估）</span></td>
+            <td><span style="color:#FAB1A0;font-weight:700">+61.3%（還原後）</span></td>
+          </tr>
+          <tr>
+            <td>2026年初至今報酬</td>
+            <td><span style="color:#55EFC4;font-weight:600">+26.25%</span></td>
+            <td><span style="color:var(--muted)">約 −7.75%（估）</span></td>
+            <td><span style="color:#55EFC4;font-weight:600">+16.57%</span></td>
+          </tr>
+          <tr>
+            <td>近6個月報酬</td>
+            <td><span style="color:#55EFC4;font-weight:600">+61.79%</span></td>
+            <td><span style="color:var(--muted)">+15.3%（估）</span></td>
+            <td><span style="color:var(--muted)">+34.4%（估）</span></td>
+          </tr>
+          <tr>
+            <td>管理費用率</td>
+            <td><span style="color:#FF7675;font-weight:600">1.49%（高）</span></td>
+            <td>－（無管理費）</td>
+            <td><span style="color:#55EFC4;font-weight:600">~0.20%（低）</span></td>
+          </tr>
+          <tr>
+            <td>股票分割</td>
+            <td>－</td>
+            <td>－</td>
+            <td><span class="split-note">2025/6/18 一拆四</span></td>
+          </tr>
+          <tr>
+            <td>52週高 / 低</td>
+            <td>N/A（上市未滿1年）</td>
+            <td>2,025 / 780 元</td>
+            <td>188.9 / 46.3 元（還原前後跨越分割）</td>
+          </tr>
+          <tr>
+            <td>配息頻率</td>
+            <td>季配息（每年4次）</td>
+            <td>季配息（每年4次）</td>
+            <td>半年配（每年2次）</td>
+          </tr>
+          <tr>
+            <td>現金殖利率</td>
+            <td>~2-3%（估）</td>
+            <td>~1.81%（近5年均）</td>
+            <td>~2-3%</td>
+          </tr>
+          <tr>
+            <td>持股集中度</td>
+            <td>電子股~90%（高集中）</td>
+            <td>單一公司（最高集中）</td>
+            <td>50檔分散（低集中）</td>
+          </tr>
+          <tr>
+            <td>主要持股</td>
+            <td>台積電、聯發科、大立光等成長股</td>
+            <td>台積電本身</td>
+            <td>台積電(約30%)、聯發科、鴻海等</td>
+          </tr>
+          <tr>
+            <td>風險等級</td>
+            <td><span class="tag tag-high">高風險 RR4</span></td>
+            <td><span class="tag tag-mid">中高風險</span></td>
+            <td><span class="tag tag-low">中風險</span></td>
+          </tr>
+          <tr>
+            <td>選股邏輯</td>
+            <td>每日動態調整，汰弱擇強</td>
+            <td>持有單一公司股權</td>
+            <td>定期依市值排名調整</td>
+          </tr>
+          <tr>
+            <td>透明度</td>
+            <td>每月揭露持股</td>
+            <td>公開財報，高透明</td>
+            <td>即時揭露成分股</td>
+          </tr>
+          <tr>
+            <td>適合投資人</td>
+            <td>追求高報酬、接受高風險</td>
+            <td>看好台積電、半導體趨勢</td>
+            <td>穩健長期投資、分散風險</td>
+          </tr>
+          <tr>
+            <td>優點</td>
+            <td>主動靈活、短期超額報酬顯著</td>
+            <td>護城河深、AI受惠最直接</td>
+            <td>費用低、歷史長、分散穩健</td>
+          </tr>
+          <tr>
+            <td>缺點</td>
+            <td>費用高、績效依賴經理人、歷史短</td>
+            <td>單一公司風險、波動極大（52週振幅160%）</td>
+            <td>被動追蹤，無法超越指數</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════ SECTION 3: 績效圖表 ════════ -->
+  <div id="performance" class="section">
+    <div class="section-title"><span style="background:var(--c2)"></span>績效圖表</div>
+
+    <!-- Period Returns Bar Chart -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3>各期間累積報酬率</h3>
+        <p>以 2025/5/27（00981A掛牌日）為共同起始點</p>
+      </div>
+      <div class="chart-box">
+        <div class="chart-btn-group" id="periodBtnGroup">
+          <button class="chart-btn active" onclick="setPeriodChart('grouped')">分組比較</button>
+          <button class="chart-btn" onclick="setPeriodChart('stacked')">堆疊比較</button>
+        </div>
+        <div class="chart-container" style="height:300px">
+          <canvas id="periodChart"></canvas>
+        </div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>00981A</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c2)"></div>2330 台積電</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>0050</div>
+        </div>
+        <p class="note">* 近3M/6M數據：00981A與0050為公開數據；2330為估算值。上市至今以2026/3/26收盤價計算。</p>
+      </div>
+    </div>
+
+    <!-- Cumulative Line Chart -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3>累積報酬走勢（月線）</h3>
+        <p>以 2025/5/27 = 100 為基準，逐月追蹤至 2026/3/26</p>
+      </div>
+      <div class="chart-box">
+        <div class="chart-container" style="height:320px">
+          <canvas id="cumChart"></canvas>
+        </div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>00981A</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c2)"></div>2330（估）</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>0050（1拆4還原）</div>
+        </div>
+        <p class="note">* 基準值=100（2025/5/27）。0050已還原一拆四；2330月線為估算值（以公開52週數據重建）。</p>
+      </div>
+    </div>
+
+    <!-- Fee Impact -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3>費用率長期影響模擬</h3>
+        <p>假設每年10%報酬率，投入100萬，費用侵蝕效果（30年）</p>
+      </div>
+      <div class="chart-box">
+        <div class="chart-container" style="height:260px">
+          <canvas id="feeChart"></canvas>
+        </div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>00981A（費用率1.49%）</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>0050（費用率0.20%）</div>
+        </div>
+        <p class="note">* 2330 無管理費，個股費用僅交易手續費（忽略不計）</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SECTION 4: 多維分析 ════════ -->
+  <div id="radar" class="section">
+    <div class="section-title"><span style="background:var(--c3)"></span>多維度評分分析</div>
+
+    <div class="dual-grid">
+      <div class="chart-box">
+        <div style="font-size:14px;font-weight:600;margin-bottom:16px;text-align:center;">綜合評分雷達圖</div>
+        <div class="chart-container" style="height:280px">
+          <canvas id="radarChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div style="font-size:14px;font-weight:600;margin-bottom:16px;text-align:center;">各維度評分細項</div>
+        <div id="dimensionBars"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:16px;">三商品評分總覽</div>
+      <div id="scoreCards"></div>
+    </div>
+  </div>
+
+  <!-- ════════ SECTION 5: 投資建議 ════════ -->
+  <div id="summary" class="section">
+    <div class="section-title"><span style="background:var(--c3)"></span>投資建議摘要</div>
+
+    <div class="summary-grid">
+      <div class="summary-card" style="border-top:3px solid var(--c1)">
+        <h4><span style="color:var(--c1)">⬡</span> 00981A 適合族群</h4>
+        <ul>
+          <li>追求超越大盤的高報酬</li>
+          <li>接受主動式 ETF 較高費用</li>
+          <li>相信經理人選股能力</li>
+          <li>偏好科技成長型投資風格</li>
+          <li>需要季配息穩定現金流</li>
+        </ul>
+        <div class="recommend-badge" style="background:rgba(108,92,231,0.2);color:#A29BFE">進取型 · 短中期成長</div>
+      </div>
+
+      <div class="summary-card" style="border-top:3px solid var(--c2)">
+        <h4><span style="color:var(--c2)">⬡</span> 2330 台積電適合族群</h4>
+        <ul class="li-c2">
+          <li>高度看好半導體&AI產業</li>
+          <li>願意承擔高振幅（52週振幅達160%）</li>
+          <li>長期持有，不輕易賣出</li>
+          <li>享有季配息被動收入</li>
+          <li>信任台積電護城河與技術領先</li>
+        </ul>
+        <div class="recommend-badge" style="background:rgba(0,184,148,0.2);color:#55EFC4">信念型 · 產業龍頭押注</div>
+      </div>
+
+      <div class="summary-card" style="border-top:3px solid var(--c3)">
+        <h4><span style="color:var(--c3)">⬡</span> 0050 適合族群</h4>
+        <ul class="li-c3">
+          <li>追求穩健長期資產增值</li>
+          <li>不想主動選股、懶人投資</li>
+          <li>重視費用率與成本控制</li>
+          <li>分散風險、不集中單一產業</li>
+          <li>1拆4後每股親民、適合定期定額</li>
+        </ul>
+        <div class="recommend-badge" style="background:rgba(225,112,85,0.2);color:#FAB1A0">穩健型 · 長期複利</div>
+      </div>
+    </div>
+
+    <!-- Bubble Chart -->
+    <div class="chart-box" style="margin-top:24px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:20px;">風險 vs 報酬 泡泡圖（同期比較）</div>
+      <div class="chart-container" style="height:280px">
+        <canvas id="bubbleChart"></canvas>
+      </div>
+      <p class="note">* X軸＝波動風險程度（估）；Y軸＝上市至今報酬（2025/5/27–2026/3/26）；圓圈大小＝費用率影響（2330無費用率以最小圓顯示）</p>
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-top:24px;">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px;">⚠️ 免責聲明</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+        本簡報資料僅供參考，不構成任何投資建議。投資具有風險，過去績效不代表未來報酬。
+        00981A上市至今報酬以2026/3/26收盤20.92元及掛牌初始價格推算；0050已還原2025年6月一拆四分割；
+        2330同期估算數據以公開52週價格區間重建，非精確交易數據。請以各投信官網及公開說明書為準。
+        投資前請審慎評估個人財務狀況與風險承受能力。
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  資料更新：2026/3/26 ｜ 數據來源：統一投信、元大投信、台灣證券交易所、Yahoo台灣股市、公開市場資訊<br>
+  比較基準期間：2025/5/27（00981A掛牌日）至 2026/3/26
+</footer>
+
+<script>
+Chart.defaults.color = '#8892B0';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif";
+
+const C1 = '#6C5CE7', C2 = '#00B894', C3 = '#E17055';
+const C1A = 'rgba(108,92,231,0.25)', C2A = 'rgba(0,184,148,0.25)', C3A = 'rgba(225,112,85,0.25)';
+
+// ── 導覽 ──
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const labels = {overview:'商品總覽',compare:'特色比較表',performance:'績效圖表',radar:'多維分析',summary:'投資建議'};
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.textContent.trim() === labels[id]) t.classList.add('active');
+  });
+  if (id === 'performance') initPerformanceCharts();
+  if (id === 'radar') initRadarCharts();
+  if (id === 'summary') initSummaryCharts();
+}
+
+// ── 資料（基準 = 100 於 2025/5/27）──
+const MONTHS = ['5/27', '6月', '7月', '8月', '9月', '10月', '11月', '12月', '1月', '2月', '3/26'];
+
+// 00981A：上市至2025/12/30 +70%，2026 YTD +26.25%，3月 +5.71%（確認數據）
+// 推算掛牌初始值~9.75元，12月底=9.75×1.70=16.58，3/26=16.58×1.2625=20.92 ✓
+const cum981 = [100, 106, 118, 136, 158, 151, 165, 170, 183, 200, 215];
+
+// 0050：一拆四後參考價47.16（6/18），3/26=75.80，2026 YTD +16.57%
+// 12月底=75.80/1.1657=65.0；5/27估~47.0（拆前~188）
+// 已還原至同基準100
+const cum0050 = [100, 100, 111, 116, 121, 126, 131, 138, 144, 152, 161];
+
+// 2330：52週780~2025，3/26=1845。以5/27~950元為基準估算（確認範圍後重建月線）
+const cum2330 = [100, 114, 128, 152, 180, 210, 222, 210, 200, 193, 194];
+
+// 各期間報酬（確認 or 估）
+const periodData = {
+  labels: ['近3個月', '近6個月', '上市至今'],
+  a981:  [26.25, 61.79, 114.6],
+  a2330: [-7.75, 15.3,   94.2],
+  a0050: [16.57, 34.4,   61.3],
+};
+
+// ── 圖表旗標 ──
+let periodChart, cumChart, feeChart, radarChart, bubbleChart;
+let perfInited = false, radarInited = false, summaryInited = false;
+
+// ── Performance Charts ──
+function initPerformanceCharts() {
+  if (perfInited) return;
+  perfInited = true;
+  buildPeriodChart('grouped');
+  buildCumChart();
+  buildFeeChart();
+}
+
+function buildPeriodChart(mode) {
+  if (periodChart) periodChart.destroy();
+  const ctx = document.getElementById('periodChart').getContext('2d');
+  periodChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: periodData.labels,
+      datasets: [
+        { label: '00981A', data: periodData.a981, backgroundColor: C1A, borderColor: C1, borderWidth: 2, borderRadius: 6 },
+        { label: '2330（估）', data: periodData.a2330, backgroundColor: C2A, borderColor: C2, borderWidth: 2, borderRadius: 6 },
+        { label: '0050', data: periodData.a0050, backgroundColor: C3A, borderColor: C3, borderWidth: 2, borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'x',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1A1D2E', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw > 0 ? '+' : ''}${ctx.raw}%` }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+function setPeriodChart(mode) {
+  document.getElementById('periodBtnGroup').querySelectorAll('.chart-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && mode === 'grouped') || (i === 1 && mode === 'stacked'));
+  });
+  buildPeriodChart(mode);
+}
+
+function buildCumChart() {
+  if (cumChart) cumChart.destroy();
+  const ctx = document.getElementById('cumChart').getContext('2d');
+
+  // 產生 annotation at 100
+  const baselinePlugin = {
+    id: 'baseline',
+    afterDraw(chart) {
+      const {ctx, scales} = chart;
+      if (!scales.y) return;
+      const y = scales.y.getPixelForValue(100);
+      ctx.save();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(scales.x.left, y);
+      ctx.lineTo(scales.x.right, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  cumChart = new Chart(ctx, {
+    type: 'line',
+    plugins: [baselinePlugin],
+    data: {
+      labels: MONTHS,
+      datasets: [
+        {
+          label: '00981A',
+          data: cum981,
+          borderColor: C1,
+          backgroundColor: 'rgba(108,92,231,0.08)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: C1,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          borderWidth: 2.5,
+        },
+        {
+          label: '2330（估）',
+          data: cum2330,
+          borderColor: C2,
+          backgroundColor: 'rgba(0,184,148,0.05)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: C2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          borderWidth: 2.5,
+          borderDash: [],
+        },
+        {
+          label: '0050（1拆4還原）',
+          data: cum0050,
+          borderColor: C3,
+          backgroundColor: 'rgba(225,112,85,0.05)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: C3,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          borderWidth: 2.5,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1A1D2E',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          callbacks: {
+            title: ctx => '2025/' + ctx[0].label,
+            label: ctx => {
+              const v = ctx.raw;
+              const ret = (v - 100).toFixed(1);
+              return ` ${ctx.dataset.label}: ${v} (${ret > 0 ? '+' : ''}${ret}%)`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { callback: v => v },
+          title: { display: true, text: '相對表現（基準 = 100）', color: '#8892B0', font: { size: 11 } }
+        }
+      }
+    }
+  });
+}
+
+function buildFeeChart() {
+  const yrs = Array.from({length: 31}, (_, i) => i);
+  function calcFee(gross, fee, n) {
+    const net = gross - fee;
+    const r = [100];
+    for (let i = 1; i <= n; i++) r.push(+(r[i-1] * (1 + net / 100)).toFixed(2));
+    return r;
+  }
+  const fee981 = calcFee(10, 1.49, 30);
+  const fee0050 = calcFee(10, 0.20, 30);
+  if (feeChart) feeChart.destroy();
+  const ctx = document.getElementById('feeChart').getContext('2d');
+  feeChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: yrs.map(y => y + '年'),
+      datasets: [
+        { label: '00981A（1.49%）', data: fee981, borderColor: C1, backgroundColor: 'rgba(108,92,231,0.08)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 },
+        { label: '0050（0.20%）', data: fee0050, borderColor: C3, backgroundColor: 'rgba(225,112,85,0.08)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1A1D2E', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)} 萬`,
+            footer: ctx => {
+              if (ctx.length >= 2) {
+                const diff = (ctx[1].raw - ctx[0].raw).toFixed(1);
+                return `0050 多賺：${diff} 萬（費用差異）`;
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 7 } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + '萬' } }
+      }
+    }
+  });
+}
+
+// ── Radar Charts ──
+const dimensions = ['報酬潛力', '分散風險', '費用效率', '穩定性', '流動性', '配息能力'];
+const scores = {
+  a981:  [9, 3, 2, 5, 7, 7],
+  a2330: [8, 2, 9, 7, 9, 6],
+  a0050: [7, 9, 9, 9, 9, 7],
+};
+
+function initRadarCharts() {
+  if (radarInited) return;
+  radarInited = true;
+
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: dimensions,
+      datasets: [
+        { label: '00981A', data: scores.a981, borderColor: C1, backgroundColor: 'rgba(108,92,231,0.15)', pointBackgroundColor: C1, pointRadius: 4, borderWidth: 2 },
+        { label: '2330',   data: scores.a2330, borderColor: C2, backgroundColor: 'rgba(0,184,148,0.12)',  pointBackgroundColor: C2, pointRadius: 4, borderWidth: 2 },
+        { label: '0050',   data: scores.a0050, borderColor: C3, backgroundColor: 'rgba(225,112,85,0.12)', pointBackgroundColor: C3, pointRadius: 4, borderWidth: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0, max: 10,
+          ticks: { stepSize: 2, backdropColor: 'transparent' },
+          grid: { color: 'rgba(255,255,255,0.08)' },
+          angleLines: { color: 'rgba(255,255,255,0.08)' },
+          pointLabels: { font: { size: 11 }, color: '#8892B0' }
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12, usePointStyle: true } }
+      }
+    }
+  });
+
+  // Dimension bars
+  const colors = { a981: C1, a2330: C2, a0050: C3 };
+  const names  = { a981: '00981A', a2330: '2330', a0050: '0050' };
+  let html = '';
+  dimensions.forEach((dim, i) => {
+    html += `<div style="margin-bottom:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:6px;">${dim}</div><div style="display:flex;flex-direction:column;gap:4px;">`;
+    ['a981', 'a2330', 'a0050'].forEach(k => {
+      const v = scores[k][i];
+      html += `<div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:42px;font-size:10px;color:${colors[k]};flex-shrink:0;">${names[k]}</div>
+        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:5px;overflow:hidden;">
+          <div style="width:${v*10}%;height:100%;background:${colors[k]};border-radius:3px;"></div>
+        </div>
+        <div style="width:16px;font-size:11px;text-align:right;">${v}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('dimensionBars').innerHTML = html;
+
+  // Score cards
+  const totals = { a981: scores.a981.reduce((a,b)=>a+b,0), a2330: scores.a2330.reduce((a,b)=>a+b,0), a0050: scores.a0050.reduce((a,b)=>a+b,0) };
+  const maxTotal = 60;
+  let scHtml = `<div class="score-grid">`;
+  [['a981','00981A',C1,'#A29BFE'],['a2330','2330 台積電',C2,'#55EFC4'],['a0050','0050',C3,'#FAB1A0']].forEach(([k,n,c,tc]) => {
+    scHtml += `<div class="score-card">
+      <div class="score-title">${n}</div>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${totals[k]/maxTotal*100}%;background:${c}"></div></div>
+      <div class="score-num" style="color:${tc}">${totals[k]}<span style="font-size:14px;color:var(--muted)"> / ${maxTotal}</span></div>
+    </div>`;
+  });
+  scHtml += `</div>`;
+  document.getElementById('scoreCards').innerHTML = scHtml;
+}
+
+// ── Summary Charts ──
+function initSummaryCharts() {
+  if (summaryInited) return;
+  summaryInited = true;
+  const ctx = document.getElementById('bubbleChart').getContext('2d');
+  bubbleChart = new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: [
+        { label: '00981A', data: [{ x: 7.5, y: 114.6, r: 18 }], backgroundColor: 'rgba(108,92,231,0.5)', borderColor: C1, borderWidth: 2 },
+        { label: '2330（估）', data: [{ x: 9, y: 94.2, r: 6 }], backgroundColor: 'rgba(0,184,148,0.5)', borderColor: C2, borderWidth: 2 },
+        { label: '0050', data: [{ x: 5, y: 61.3, r: 8 }], backgroundColor: 'rgba(225,112,85,0.5)', borderColor: C3, borderWidth: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12, usePointStyle: true } },
+        tooltip: {
+          backgroundColor: '#1A1D2E', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          callbacks: {
+            label: ctx => [
+              ` ${ctx.dataset.label}`,
+              ` 風險程度: ${ctx.raw.x}/10`,
+              ` 上市至今報酬: +${ctx.raw.y}%`,
+              ` 費用率: ${ctx.dataset.label==='00981A'?'1.49%':ctx.dataset.label==='0050'?'~0.20%':'~0%'}`,
+            ]
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: 2, max: 12,
+          title: { display: true, text: '波動風險程度 →', color: '#8892B0', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { callback: v => v + '/10' }
+        },
+        y: {
+          title: { display: true, text: '上市至今報酬率（%）→', color: '#8892B0', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { callback: v => v + '%' }
+        }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
