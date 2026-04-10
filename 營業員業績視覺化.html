@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>營業員業績視覺化</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', '微軟正黑體', sans-serif; background: #f0f4f8; color: #2d3748; }
+  header {
+    background: linear-gradient(135deg, #1a365d, #2b6cb0);
+    color: white; padding: 20px 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+  header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+  .tabs {
+    display: flex; gap: 4px;
+    background: #fff; padding: 12px 24px 0;
+    border-bottom: 2px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 10px 22px; border: none; border-radius: 8px 8px 0 0;
+    background: #e2e8f0; color: #4a5568; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .tab-btn:hover { background: #bee3f8; color: #2b6cb0; }
+  .tab-btn.active { background: #2b6cb0; color: white; }
+
+  .tab-content { display: none; padding: 24px; }
+  .tab-content.active { display: block; }
+
+  .chart-card {
+    background: white; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 24px;
+  }
+  .chart-title {
+    font-size: 16px; font-weight: 700; color: #1a365d;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 2px solid #bee3f8;
+  }
+  .chart-wrap { position: relative; height: 420px; }
+  .chart-wrap-tall { position: relative; height: 500px; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    align-items: center; margin-bottom: 16px;
+  }
+  .controls label { font-size: 13px; font-weight: 600; color: #4a5568; }
+  .controls select, .controls input[type=text] {
+    padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 6px;
+    font-size: 13px; color: #2d3748; background: #f7fafc;
+    outline: none; transition: border 0.2s;
+  }
+  .controls select:focus, .controls input:focus { border-color: #4299e1; background: #fff; }
+
+  .legend-toggle {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+  }
+  .legend-btn {
+    padding: 4px 12px; border-radius: 20px; border: 2px solid;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .legend-btn.hidden { opacity: 0.35; text-decoration: line-through; }
+
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .summary-card {
+    border-radius: 10px; padding: 14px 16px;
+    border-left: 4px solid #2b6cb0;
+  }
+  .summary-card .name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .summary-card .value { font-size: 20px; font-weight: 800; color: #1a365d; }
+  .summary-card .sub { font-size: 11px; color: #4a5568; margin-top: 2px; }
+
+  .info-note {
+    font-size: 12px; color: #718096; margin-bottom: 12px;
+    background: #f7fafc; padding: 8px 12px; border-radius: 6px;
+    border-left: 3px solid #90cdf4;
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 14px 16px; }
+    .tab-content { padding: 12px; }
+    .chart-card { padding: 14px; }
+    .chart-wrap { height: 280px; }
+    .chart-wrap-tall { height: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>營業員業績視覺化儀表板</h1>
+  <p>資料期間：民國114年1月 ～ 115年3月（共15個月）｜客戶數：108｜營業員數：7</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('salesperson',this)">📈 每月營業員業績（折線）</button>
+  <button class="tab-btn" onclick="switchTab('customer',this)">👤 每月客戶業績（折線）</button>
+  <button class="tab-btn" onclick="switchTab('cumulative',this)">📊 每月累積總覽（直條）</button>
+</div>
+
+<!-- Tab 1 -->
+<div id="tab-salesperson" class="tab-content active">
+  <div class="chart-card">
+    <div class="chart-title">各營業員每月業績折線圖</div>
+    <div class="summary-grid" id="salesperson-summary"></div>
+    <div class="legend-toggle" id="salesperson-legend"></div>
+    <div class="chart-wrap">
+      <canvas id="chartSalesperson"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 2 -->
+<div id="tab-customer" class="tab-content">
+  <div class="chart-card">
+    <div class="chart-title">各客戶每月業績折線圖</div>
+    <div class="controls">
+      <label>依營業員篩選：</label>
+      <select id="filterSalesperson" onchange="filterCustomers()">
+        <option value="">全部營業員</option>
+      </select>
+      <label>搜尋客戶：</label>
+      <input type="text" id="searchCustomer" placeholder="輸入客戶姓名..." oninput="filterCustomers()" style="width:160px">
+      <label>選取客戶（可多選）：</label>
+      <select id="customerSelect" multiple size="6" onchange="updateCustomerChart()" style="min-width:200px"></select>
+    </div>
+    <div class="info-note">💡 可依營業員篩選，再從清單多選客戶（Ctrl/⌘ 多選），折線圖即時更新。</div>
+    <div class="chart-wrap-tall">
+      <canvas id="chartCustomer"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 3 -->
+<div id="tab-cumulative" class="tab-content">
+  <div class="chart-card">
+    <div class="chart-title">每月業績累積直條圖（依營業員分組堆疊）</div>
+    <div class="controls">
+      <label>顯示方式：</label>
+      <select id="barMode" onchange="updateCumulativeChart()">
+        <option value="stacked">堆疊直條（各營業員）</option>
+        <option value="grouped">分組直條（各營業員）</option>
+        <option value="total">月總量（單一直條）</option>
+      </select>
+    </div>
+    <div class="chart-wrap-tall">
+      <canvas id="chartCumulative"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">各營業員業績佔比（全期間合計）</div>
+    <div class="chart-wrap" style="height:320px;">
+      <canvas id="chartPie"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const rawData = [
+  {id:1,客戶:'任健柏',營業員:'胡文鐘',values:[80,2084,402,684,0,424,670,108,262,0,154,0,14,244,853]},
+  {id:2,客戶:'余念祖',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,109,334]},
+  {id:3,客戶:'劉光昌',營業員:'胡文鐘',values:[0,0,0,18,72,86,0,0,0,0,0,0,0,0,0]},
+  {id:4,客戶:'劉嘉萍',營業員:'何如玄',values:[65,244,0,0,91,185,54,73,84,72,108,53,85,97,159]},
+  {id:5,客戶:'劉國文',營業員:'陳麗鈴',values:[33,32,46,21,56,68,72,123,161,96,130,58,40,29,22]},
+  {id:6,客戶:'劉珮芬',營業員:'何如玄',values:[1,3,2,6,12,9,10,10,7,9,2,8,7,5,18]},
+  {id:7,客戶:'劉財君',營業員:'何如玄',values:[377,332,0,0,222,291,309,196,267,468,401,552,386,194,414]},
+  {id:8,客戶:'劉連襄',營業員:'徐玉琴',values:[0,0,144,13,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:9,客戶:'劉運裏',營業員:'徐玉琴',values:[0,0,0,0,127,0,0,0,0,0,0,0,0,0,0]},
+  {id:10,客戶:'劉運襄',營業員:'徐玉琴',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,19,9]},
+  {id:11,客戶:'劉馨玲',營業員:'胡文鐘',values:[17,70,36,13,65,42,95,102,140,243,192,312,246,84,77]},
+  {id:12,客戶:'劉鳳琴',營業員:'徐玉琴',values:[0,0,0,0,0,0,0,0,0,0,0,238,87,33,0]},
+  {id:13,客戶:'吳振鋒',營業員:'何如玄',values:[3,91,26,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:14,客戶:'吳智軒',營業員:'何如玄',values:[53,49,110,70,34,20,6,0,2,0,3,33,131,32,44]},
+  {id:15,客戶:'吳碧珍',營業員:'何如玄',values:[91,112,203,96,8,21,5,5,4,3,37,6,4,36,156]},
+  {id:16,客戶:'吳青原',營業員:'陳麗鈴',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,10]},
+  {id:17,客戶:'廖宗輝',營業員:'陳麗鈴',values:[595,1721,958,53,0,0,3,22,0,0,3,6,0,0,0]},
+  {id:18,客戶:'張凱翔',營業員:'徐玉琴',values:[14,38,40,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:19,客戶:'張峻祐',營業員:'何如玄',values:[0,0,0,0,12,25,10,6,0,0,0,0,0,0,0]},
+  {id:20,客戶:'張明芸',營業員:'林玟妏',values:[0,0,0,0,0,0,0,0,0,0,0,0,26,63,190]},
+  {id:21,客戶:'張春榮',營業員:'何如玄',values:[53,162,182,139,161,104,119,85,333,528,333,246,305,221,338]},
+  {id:22,客戶:'張瑞彬',營業員:'何如玄',values:[2,2,3,1,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:23,客戶:'張竣祐',營業員:'何如玄',values:[13,4,0,0,0,0,0,0,3,60,0,2,0,0,0]},
+  {id:24,客戶:'張軒榮',營業員:'何如玄',values:[45,176,743,206,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:25,客戶:'張達志',營業員:'胡文鐘',values:[0,2,20,20,58,88,108,128,104,273,311,486,284,105,264]},
+  {id:26,客戶:'張鐙麟',營業員:'林琝綺',values:[0,0,0,0,0,0,0,0,0,0,1264,582,139,12,91]},
+  {id:27,客戶:'彭宇綸',營業員:'徐玉琴',values:[886,642,452,85,46,68,0,0,0,0,0,0,0,0,0]},
+  {id:28,客戶:'彭正昊',營業員:'何如玄',values:[63,54,129,367,322,474,536,440,610,632,661,437,338,178,447]},
+  {id:29,客戶:'徐仁俊',營業員:'邱淑纓',values:[0,20,0,14,0,0,46,0,0,52,178,64,0,4,12]},
+  {id:30,客戶:'徐宏相',營業員:'陳麗鈴',values:[125,148,123,84,140,287,194,138,168,383,191,82,21,52,134]},
+  {id:31,客戶:'徐盛其',營業員:'邱淑纓',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,92]},
+  {id:32,客戶:'徐秀興',營業員:'何如玄',values:[277,79,80,90,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:33,客戶:'戴志維',營業員:'胡文鐘',values:[0,0,2,106,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:34,客戶:'曾兆良',營業員:'林玟妏',values:[0,0,0,0,0,0,0,0,0,0,0,0,56,18,12]},
+  {id:35,客戶:'曾瑞鴻',營業員:'邱淑纓',values:[224,0,16,4,0,10,6,6,134,258,6,344,206,0,0]},
+  {id:36,客戶:'朱弘偉',營業員:'邱淑纓',values:[26,14,111,372,1097,53,12,170,267,66,1182,562,308,153,359]},
+  {id:37,客戶:'李函育',營業員:'何如玄',values:[10,30,0,0,6,0,0,0,0,0,0,0,0,0,0]},
+  {id:38,客戶:'李志賢',營業員:'徐玉琴',values:[96,120,187,208,25,0,53,107,116,204,308,265,240,238,522]},
+  {id:39,客戶:'李政諺',營業員:'邱淑纓',values:[10,6,13,12,3,0,0,0,0,2,2,16,11,2,8]},
+  {id:40,客戶:'林定豐',營業員:'邱淑纓',values:[247,182,359,138,58,99,201,0,393,626,799,427,783,197,245]},
+  {id:41,客戶:'林振祥',營業員:'何如玄',values:[36,109,88,19,38,0,0,0,0,0,2,29,26,0,0]},
+  {id:42,客戶:'林明進',營業員:'陳麗鈴',values:[55,36,14,2,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:43,客戶:'林玟妏',營業員:'林玟妏',values:[0,0,0,0,0,0,0,0,0,0,4,6,10,2,0]},
+  {id:44,客戶:'林純怡',營業員:'林琝綺',values:[0,0,0,0,0,0,0,0,0,0,0,73,90,35,28]},
+  {id:45,客戶:'林聖祐',營業員:'陳麗鈴',values:[0,0,0,32,6,10,10,3,1,0,0,0,0,0,0]},
+  {id:46,客戶:'林麗珺',營業員:'胡文鐘',values:[2,5,3,4,19,26,44,93,0,0,0,0,0,0,0]},
+  {id:47,客戶:'林麗碧',營業員:'胡文鐘',values:[0,0,0,0,0,0,0,0,79,59,32,27,40,18,24]},
+  {id:48,客戶:'柯建安',營業員:'何如玄',values:[2,0,25,20,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:49,客戶:'沈鎔權',營業員:'何如玄',values:[14,40,28,50,50,110,46,29,13,16,75,53,13,65,68]},
+  {id:50,客戶:'洪東億',營業員:'胡文鐘',values:[0,0,0,0,0,0,1,10,0,5,538,549,771,492,229]},
+  {id:51,客戶:'游智堯',營業員:'陳麗鈴',values:[0,0,0,0,0,0,0,0,0,95,0,1,3,0,0]},
+  {id:52,客戶:'溫智輝',營業員:'邱淑纓',values:[154,168,272,17,40,225,211,63,22,55,122,504,137,40,0]},
+  {id:53,客戶:'潘明慧',營業員:'陳麗鈴',values:[0,0,0,0,0,0,610,171,0,0,245,313,555,162,428]},
+  {id:54,客戶:'王毓萱',營業員:'陳麗鈴',values:[7,6,3,15,12,19,25,80,46,88,36,13,28,16,15]},
+  {id:55,客戶:'王玲華',營業員:'胡文鐘',values:[54,91,69,133,91,81,55,63,77,95,163,75,109,61,72]},
+  {id:56,客戶:'王盈筑',營業員:'胡文鐘',values:[16,16,4,5,6,0,0,1,6,0,0,0,0,0,0]},
+  {id:57,客戶:'王萬福',營業員:'徐玉琴',values:[0,0,10,15,0,0,0,0,0,0,0,0,0,0,20]},
+  {id:58,客戶:'簡志傑',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:59,客戶:'羅光佑',營業員:'何如玄',values:[80,26,92,102,11,54,54,4,4,0,0,8,12,7,61]},
+  {id:60,客戶:'羅志源',營業員:'何如玄',values:[173,0,18,23,0,0,2,0,204,164,207,91,2,0,6]},
+  {id:61,客戶:'羅文聰',營業員:'胡文鐘',values:[154,17,23,2,0,0,6,32,0,0,0,0,0,6,76]},
+  {id:62,客戶:'羅景丰',營業員:'邱淑纓',values:[0,16,426,138,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:63,客戶:'范志遠',營業員:'胡文鐘',values:[0,0,0,0,0,0,0,0,0,0,0,16,8,0,0]},
+  {id:64,客戶:'范意屏',營業員:'徐玉琴',values:[454,318,921,330,161,180,308,693,810,1655,5204,5333,8674,2561,3084]},
+  {id:65,客戶:'范沛琦',營業員:'陳麗鈴',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,31]},
+  {id:66,客戶:'莊勝隆',營業員:'陳麗鈴',values:[124,230,292,312,151,216,112,85,66,103,142,84,122,134,255]},
+  {id:67,客戶:'葉德金',營業員:'何如玄',values:[84,30,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:68,客戶:'葉怡雯',營業員:'胡文鐘',values:[0,0,0,0,0,0,0,30,59,28,166,9,2,0,0]},
+  {id:69,客戶:'蔡元培',營業員:'陳麗鈴',values:[56,12,132,54,36,11,49,27,79,105,69,39,45,10,0]},
+  {id:70,客戶:'蔡永承',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:71,客戶:'蕭仁興',營業員:'胡文鐘',values:[31,107,116,469,255,205,362,212,315,302,381,130,292,152,317]},
+  {id:72,客戶:'蘇文椿',營業員:'徐玉琴',values:[0,0,0,0,0,0,0,0,18,10,35,45,84,44,62]},
+  {id:73,客戶:'蘇文禧',營業員:'徐玉琴',values:[58,26,22,29,4,1,8,63,0,0,0,0,0,0,0]},
+  {id:74,客戶:'許嘉元',營業員:'何如玄',values:[0,0,0,0,0,0,0,57,0,0,0,0,0,0,0]},
+  {id:75,客戶:'許家堉',營業員:'何如玄',values:[0,0,0,0,6,4,0,0,0,14,116,87,306,397,400]},
+  {id:76,客戶:'謝政國',營業員:'何如玄',values:[0,0,7,278,735,1512,1823,1644,1537,141,387,1344,2464,1698,2046]},
+  {id:77,客戶:'謝鴻猷',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,2,159]},
+  {id:78,客戶:'賴彥穎',營業員:'何如玄',values:[6,0,0,0,0,0,0,0,0,0,0,0,0,0,1]},
+  {id:79,客戶:'賴永峰',營業員:'邱淑纓',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,3]},
+  {id:80,客戶:'賴韋捷',營業員:'陳麗鈴',values:[4,5,9,4,19,55,85,57,0,0,0,0,0,0,0]},
+  {id:81,客戶:'鄭元銘',營業員:'陳麗鈴',values:[285,205,513,195,430,491,40,375,468,618,1226,97,463,16,395]},
+  {id:82,客戶:'鄭新',營業員:'何如玄',values:[4,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:83,客戶:'鄭榮文',營業員:'何如玄',values:[54,24,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:84,客戶:'鍾耀文',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,1,212,167,6]},
+  {id:85,客戶:'陳世融',營業員:'邱淑纓',values:[0,0,0,0,0,0,0,0,8,37,27,30,60,4,18]},
+  {id:86,客戶:'陳以涵',營業員:'林玟妏',values:[0,0,0,0,0,0,0,0,0,0,0,0,26,15,12]},
+  {id:87,客戶:'陳國庭',營業員:'邱淑纓',values:[13,271,150,160,12,22,36,188,17,175,26,100,0,0,0]},
+  {id:88,客戶:'陳建君',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,4]},
+  {id:89,客戶:'陳志帆',營業員:'徐玉琴',values:[0,0,0,0,0,0,0,0,0,0,0,98,69,12,39]},
+  {id:90,客戶:'陳智瑋',營業員:'邱淑纓',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,6]},
+  {id:91,客戶:'陳泳霖',營業員:'胡文鐘',values:[0,0,0,0,0,0,0,1,0,0,0,7,1,0,8]},
+  {id:92,客戶:'陳淑麗',營業員:'何如玄',values:[0,0,0,4,0,0,2,6,4,7,12,10,5,2,0]},
+  {id:93,客戶:'陳漢清',營業員:'徐玉琴',values:[0,0,0,0,0,0,0,0,223,29,0,0,0,0,0]},
+  {id:94,客戶:'陳秀琴',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:95,客戶:'陳菁蕙',營業員:'陳麗鈴',values:[0,0,0,0,0,0,0,0,0,4,0,0,0,0,0]},
+  {id:96,客戶:'陳麗君',營業員:'徐玉琴',values:[7,3,4,17,5,5,8,8,6,9,11,9,3,3,2]},
+  {id:97,客戶:'顏介裕',營業員:'何如玄',values:[220,122,644,144,42,398,38,112,82,62,196,96,124,48,262]},
+  {id:98,客戶:'高崇瀚',營業員:'邱淑纓',values:[36,154,258,16,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:99,客戶:'高永隆',營業員:'邱淑纓',values:[0,0,0,0,0,0,0,48,132,126,87,91,109,3,110]},
+  {id:100,客戶:'魏銘豪',營業員:'何如玄',values:[0,0,18,172,178,364,22,97,140,34,8,2,0,0,0]},
+  {id:101,客戶:'黃宥澄',營業員:'何如玄',values:[0,8,172,106,0,0,0,0,0,0,0,4,0,22,0]},
+  {id:102,客戶:'黃彥霖',營業員:'胡文鐘',values:[2,2,6,4,4,8,10,2,0,0,8,4,2,0,0]},
+  {id:103,客戶:'黃文政',營業員:'陳麗鈴',values:[12,32,86,20,36,0,0,0,16,14,18,24,14,0,0]},
+  {id:104,客戶:'黃文錦',營業員:'何如玄',values:[0,12,12,0,4,0,4,6,14,16,60,99,59,40,148]},
+  {id:105,客戶:'黃義雄',營業員:'何如玄',values:[0,0,0,0,0,0,0,0,0,0,0,0,0,20,171]},
+  {id:106,客戶:'黎素貞',營業員:'邱淑纓',values:[0,0,14,2,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:107,客戶:'黎美珍',營業員:'徐玉琴',values:[195,338,388,108,0,0,0,0,0,0,0,0,0,0,0]},
+  {id:108,客戶:'齊永強',營業員:'胡文鐘',values:[0,0,68,124,81,93,50,48,126,330,234,192,134,182,700]},
+];
+
+const months = ['114/1','114/2','114/3','114/4','114/5','114/6','114/7','114/8','114/9','114/10','114/11','114/12','115/1','115/2','115/3'];
+
+const salespeople = ['胡文鐘','何如玄','陳麗鈴','徐玉琴','邱淑纓','林玟妏','林琝綺'];
+
+const spColors = {
+  '胡文鐘': { border: '#e53e3e', bg: 'rgba(229,62,62,0.12)' },
+  '何如玄': { border: '#3182ce', bg: 'rgba(49,130,206,0.12)' },
+  '陳麗鈴': { border: '#d69e2e', bg: 'rgba(214,158,46,0.12)' },
+  '徐玉琴': { border: '#38a169', bg: 'rgba(56,161,105,0.12)' },
+  '邱淑纓': { border: '#805ad5', bg: 'rgba(128,90,213,0.12)' },
+  '林玟妏': { border: '#dd6b20', bg: 'rgba(221,107,32,0.12)' },
+  '林琝綺': { border: '#319795', bg: 'rgba(49,151,149,0.12)' },
+};
+
+function calcSalespersonMonthly() {
+  const result = {};
+  salespeople.forEach(sp => result[sp] = Array(15).fill(0));
+  rawData.forEach(row => row.values.forEach((v, i) => result[row.營業員][i] += v));
+  return result;
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== Chart 1: 營業員折線圖 =====
+let chartSP = null;
+const spMonthly = calcSalespersonMonthly();
+
+function buildSalespersonChart() {
+  const summaryEl = document.getElementById('salesperson-summary');
+  salespeople.forEach(sp => {
+    const total = spMonthly[sp].reduce((a,b)=>a+b,0);
+    const card = document.createElement('div');
+    card.className = 'summary-card';
+    card.style.borderLeftColor = spColors[sp].border;
+    card.style.background = `linear-gradient(135deg, #f7fafc, ${spColors[sp].bg})`;
+    card.innerHTML = `<div class="name" style="color:${spColors[sp].border}">${sp}</div><div class="value">${total.toLocaleString()}</div><div class="sub">全期合計</div>`;
+    summaryEl.appendChild(card);
+  });
+
+  const datasets = salespeople.map(sp => ({
+    label: sp,
+    data: spMonthly[sp],
+    borderColor: spColors[sp].border,
+    backgroundColor: spColors[sp].bg,
+    borderWidth: 2.5,
+    pointRadius: 5,
+    pointHoverRadius: 8,
+    tension: 0.3,
+    fill: false,
+  }));
+
+  const ctx = document.getElementById('chartSalesperson').getContext('2d');
+  chartSP = new Chart(ctx, {
+    type: 'line',
+    data: { labels: months, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.dataset.label}：${c.parsed.y.toLocaleString()}`,
+            footer: items => `合計：${items.reduce((s,i)=>s+i.parsed.y,0).toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#e2e8f0' }, ticks: { font: { size: 12 } } },
+        y: { grid: { color: '#e2e8f0' }, ticks: { font: { size: 12 } }, beginAtZero: true }
+      }
+    }
+  });
+
+  const legendEl = document.getElementById('salesperson-legend');
+  salespeople.forEach((sp, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'legend-btn';
+    btn.textContent = sp;
+    btn.style.cssText = `border-color:${spColors[sp].border};color:${spColors[sp].border};background:${spColors[sp].bg}`;
+    btn.onclick = () => {
+      const meta = chartSP.getDatasetMeta(i);
+      meta.hidden = !meta.hidden;
+      btn.classList.toggle('hidden');
+      chartSP.update();
+    };
+    legendEl.appendChild(btn);
+  });
+}
+
+// ===== Chart 2: 客戶折線圖 =====
+let chartCust = null;
+
+function initCustomerFilter() {
+  const sel = document.getElementById('filterSalesperson');
+  salespeople.forEach(sp => {
+    const opt = document.createElement('option');
+    opt.value = sp; opt.textContent = sp;
+    sel.appendChild(opt);
+  });
+  filterCustomers();
+}
+
+function filterCustomers() {
+  const sp = document.getElementById('filterSalesperson').value;
+  const q = document.getElementById('searchCustomer').value.trim();
+  const filtered = rawData
+    .filter(r => (!sp || r.營業員 === sp) && (!q || r.客戶.includes(q)))
+    .sort((a, b) => b.values[14] - a.values[14]);  // 依 11503 從多到少
+  const custSel = document.getElementById('customerSelect');
+  custSel.innerHTML = '';
+  filtered.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    opt.textContent = `${r.客戶}（${r.營業員}）　${r.values[14].toLocaleString()}`;
+    custSel.appendChild(opt);
+  });
+  const limit = Math.min(10, filtered.length);
+  for (let i = 0; i < limit; i++) custSel.options[i].selected = true;
+  updateCustomerChart();
+}
+
+function updateCustomerChart() {
+  const custSel = document.getElementById('customerSelect');
+  const selectedIds = Array.from(custSel.selectedOptions).map(o => +o.value);
+  const selected = rawData.filter(r => selectedIds.includes(r.id));
+
+  const datasets = selected.map(r => ({
+    label: `${r.客戶}（${r.營業員}）`,
+    data: r.values,
+    borderColor: spColors[r.營業員].border,
+    backgroundColor: spColors[r.營業員].bg,
+    borderWidth: 2,
+    pointRadius: 4,
+    pointHoverRadius: 7,
+    tension: 0.3,
+    fill: false,
+  }));
+
+  if (chartCust) chartCust.destroy();
+  chartCust = new Chart(document.getElementById('chartCustomer').getContext('2d'), {
+    type: 'line',
+    data: { labels: months, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 8, boxWidth: 16 } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}：${c.parsed.y.toLocaleString()}` } }
+      },
+      scales: {
+        x: { grid: { color: '#e2e8f0' }, ticks: { font: { size: 12 } } },
+        y: { grid: { color: '#e2e8f0' }, ticks: { font: { size: 12 } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ===== 自訂插件：直條頂端顯示月總合 =====
+const monthTotalLabelPlugin = {
+  id: 'monthTotalLabel',
+  afterDatasetsDraw(chart) {
+    const { ctx, data, scales: { x, y } } = chart;
+    const mode = chart._barMode;
+    if (!mode) return;
+
+    const monthTotals = data.labels.map((_, mi) =>
+      data.datasets.reduce((sum, ds) => {
+        const meta = chart.getDatasetMeta(data.datasets.indexOf(ds));
+        return sum + (meta.hidden ? 0 : (ds.data[mi] || 0));
+      }, 0)
+    );
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+
+    if (mode === 'grouped') {
+      // 個別子條數值
+      data.datasets.forEach((ds, dsi) => {
+        const meta = chart.getDatasetMeta(dsi);
+        if (meta.hidden) return;
+        meta.data.forEach((bar, i) => {
+          const v = ds.data[i];
+          if (!v) return;
+          ctx.font = 'bold 10px sans-serif';
+          ctx.fillStyle = '#1a365d';
+          ctx.fillText(v.toLocaleString(), bar.x, bar.y - 3);
+        });
+      });
+    }
+
+    // 月總合膠囊標籤
+    data.labels.forEach((_, i) => {
+      const total = monthTotals[i];
+      if (!total) return;
+      const xPos = x.getPixelForValue(i);
+      const yTop = y.getPixelForValue(total);
+      const label = total.toLocaleString();
+      ctx.font = 'bold 12px sans-serif';
+      const w = ctx.measureText(label).width + 12;
+      ctx.fillStyle = 'rgba(26,54,93,0.88)';
+      roundRect(ctx, xPos - w/2, yTop - 24, w, 20, 5);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(label, xPos, yTop - 6);
+    });
+    ctx.restore();
+  }
+};
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath(); ctx.fill();
+}
+
+// ===== Chart 3: 累積直條圖 =====
+let chartBar = null;
+let chartPie = null;
+
+function buildCumulativeChart() {
+  updateCumulativeChart();
+
+  const totals = salespeople.map(sp => spMonthly[sp].reduce((a,b)=>a+b,0));
+  chartPie = new Chart(document.getElementById('chartPie').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: salespeople,
+      datasets: [{
+        data: totals,
+        backgroundColor: salespeople.map(sp => spColors[sp].border),
+        borderWidth: 2, borderColor: '#fff', hoverOffset: 10,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 13 }, padding: 12 } },
+        tooltip: {
+          callbacks: {
+            label: c => {
+              const total = totals.reduce((a,b)=>a+b,0);
+              return ` ${c.label}：${c.parsed.toLocaleString()}（${(c.parsed/total*100).toFixed(1)}%）`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateCumulativeChart() {
+  const mode = document.getElementById('barMode').value;
+  if (chartBar) chartBar.destroy();
+
+  let datasets, options;
+
+  if (mode === 'total') {
+    const totals = months.map((_, mi) => rawData.reduce((s,r)=>s+r.values[mi],0));
+    datasets = [{
+      label: '月總業績',
+      data: totals,
+      backgroundColor: months.map((_,i)=>`hsla(${210+i*5},70%,55%,0.82)`),
+      borderColor: months.map((_,i)=>`hsla(${210+i*5},70%,40%,1)`),
+      borderWidth: 1.5, borderRadius: 6,
+    }];
+    options = {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 36 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` 合計：${c.parsed.y.toLocaleString()}` } }
+      },
+      scales: {
+        x: { grid: { color: '#e2e8f0' } },
+        y: { grid: { color: '#e2e8f0' }, beginAtZero: true }
+      }
+    };
+  } else {
+    datasets = salespeople.map(sp => ({
+      label: sp,
+      data: spMonthly[sp],
+      backgroundColor: spColors[sp].border + 'cc',
+      borderColor: spColors[sp].border,
+      borderWidth: 1,
+      borderRadius: mode === 'grouped' ? 4 : 0,
+    }));
+    options = {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 36 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 12, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.dataset.label}：${c.parsed.y.toLocaleString()}`,
+            footer: items => `月合計：${items.reduce((s,i)=>s+i.parsed.y,0).toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: { stacked: mode==='stacked', grid: { color: '#e2e8f0' } },
+        y: { stacked: mode==='stacked', grid: { color: '#e2e8f0' }, beginAtZero: true }
+      }
+    };
+  }
+
+  chartBar = new Chart(document.getElementById('chartCumulative').getContext('2d'), {
+    type: 'bar',
+    data: { labels: months, datasets },
+    options,
+    plugins: [monthTotalLabelPlugin],
+  });
+  chartBar._barMode = mode;
+}
+
+window.onload = () => {
+  buildSalespersonChart();
+  initCustomerFilter();
+  buildCumulativeChart();
+};
+</script>
+</body>
+</html>

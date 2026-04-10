@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>11503前20大客戶半年業績分析</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #818cf8, #fb7185);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .page-header p {
+      margin-top: 6px;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    /* ── KPI cards ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+    .kpi-card .label { font-size: 0.75rem; color: #64748b; letter-spacing: .04em; text-transform: uppercase; }
+    .kpi-card .value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+    .kpi-card .sub   { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all .2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+
+    /* ── Chart cards ── */
+    .chart-panel { display: none; }
+    .chart-panel.active { display: block; }
+
+    .chart-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 18px;
+    }
+    .chart-wrap { position: relative; }
+    .chart-wrap.tall { height: 420px; }
+    .chart-wrap.medium { height: 340px; }
+    .chart-wrap.short { height: 280px; }
+
+    /* ── Toggle checkboxes for line chart ── */
+    .toggle-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .toggle-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #334155;
+      cursor: pointer;
+      font-size: 0.78rem;
+      transition: all .15s;
+      user-select: none;
+    }
+    .toggle-chip input { display: none; }
+    .toggle-chip .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .toggle-chip.on { background: #1e3a5f; border-color: #3b82f6; color: #93c5fd; }
+    .toggle-chip.off { opacity: .45; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.825rem;
+    }
+    thead tr { background: #0f172a; }
+    thead th {
+      padding: 10px 12px;
+      text-align: right;
+      color: #94a3b8;
+      font-weight: 600;
+      white-space: nowrap;
+      border-bottom: 1px solid #334155;
+    }
+    thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
+    tbody tr { transition: background .15s; }
+    tbody tr:hover { background: #1e3a5f; }
+    tbody td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #1e293b;
+      white-space: nowrap;
+      text-align: right;
+    }
+    tbody td:first-child, tbody td:nth-child(2), tbody td:nth-child(3) { text-align: left; }
+    .rank-badge {
+      display: inline-block;
+      width: 26px; height: 26px;
+      line-height: 26px;
+      text-align: center;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .rank-1 { background: #f59e0b; color: #000; }
+    .rank-2 { background: #9ca3af; color: #000; }
+    .rank-3 { background: #b45309; color: #fff; }
+    .rank-other { background: #1e293b; border: 1px solid #334155; color: #94a3b8; }
+
+    .trend-up   { color: #34d399; }
+    .trend-down { color: #f87171; }
+    .trend-zero { color: #94a3b8; }
+
+    .mini-bar {
+      display: inline-block;
+      height: 6px;
+      border-radius: 3px;
+      background: #3b82f6;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    /* ── Agent filter ── */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .agent-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all .15s;
+    }
+    .agent-btn.active {
+      border-color: var(--color);
+      background: color-mix(in srgb, var(--color) 20%, transparent);
+      color: var(--color);
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>📊 11503 前20大客戶 · 半年業績分析</h1>
+  <p>統計期間：114年10月 ─ 115年3月（11410 ~ 11503）｜單位：萬元</p>
+</div>
+
+<!-- KPI Row -->
+<div class="kpi-row" id="kpiRow"></div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('bar')">📊 排行橫條</button>
+  <button class="tab-btn" onclick="switchTab('line')">📈 月趨勢折線</button>
+  <button class="tab-btn" onclick="switchTab('stacked')">📦 堆疊比較</button>
+  <button class="tab-btn" onclick="switchTab('table')">📋 明細表格</button>
+</div>
+
+<!-- Panel 1: Bar chart -->
+<div id="panel-bar" class="chart-panel active">
+  <div class="chart-card">
+    <h2>11503 當月業績排行（前20大客戶）</h2>
+    <div class="chart-wrap tall">
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h2>半年累計業績排行</h2>
+    <div class="chart-wrap tall">
+      <canvas id="totalBarChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 2: Line chart -->
+<div id="panel-line" class="chart-panel">
+  <div class="chart-card">
+    <h2>月度業績趨勢（點選客戶切換顯示）</h2>
+    <div class="toggle-grid" id="toggleGrid"></div>
+    <div class="chart-wrap tall">
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 3: Stacked bar -->
+<div id="panel-stacked" class="chart-panel">
+  <div class="chart-card">
+    <h2>各月業績堆疊比較（前10大）</h2>
+    <div class="filter-row" id="agentFilter"></div>
+    <div class="chart-wrap tall">
+      <canvas id="stackedChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Panel 4: Table -->
+<div id="panel-table" class="chart-panel">
+  <div class="chart-card">
+    <h2>前20大客戶明細資料</h2>
+    <div class="table-wrap">
+      <table id="dataTable"></table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const MONTHS = ['11410','11411','11412','11501','11502','11503'];
+const MONTH_LABELS = ['114年10月','114年11月','114年12月','115年1月','115年2月','115年3月'];
+
+const RAW = [
+  { name:'詹淑玫', account:'000888-4', agent:'陳麗鈴', rank:32,  data:[21520.3,28824.0,39984.4,68789.4,49536.7,94567.6] },
+  { name:'林河明', account:'000089-5', agent:'陳麗鈴', rank:486, data:[19494.5,11876.7,50086.1,44532.7,23524.6,30145.4] },
+  { name:'張福錦', account:'013969-8', agent:'何如玄',  rank:9,   data:[19222.1,18062.6,33883.4,28153.9,18388.3,30127.2] },
+  { name:'張耀壬', account:'010491-1', agent:'林玟妏',  rank:595, data:[0,0,0,13303.3,12571.3,25497.2] },
+  { name:'蔡坤整', account:'680453-2', agent:'何如玄',  rank:4,   data:[11451.3,6984.56,6631.46,7101.16,5256.08,23433.5] },
+  { name:'林運辰', account:'008876-5', agent:'陳麗鈴', rank:495, data:[3682.74,5497.35,24410.1,42795.2,21070.2,20317.9] },
+  { name:'陳憲聰', account:'009399-6', agent:'陳麗鈴', rank:7,   data:[11754.6,9263.74,12715.9,14016.8,7855.18,15062.0] },
+  { name:'林雨臻', account:'005520-6', agent:'陳麗鈴', rank:78,  data:[4277.65,14567.3,12820.4,35116.5,15984.8,13931.6] },
+  { name:'洪嘉莉', account:'003795-2', agent:'胡文鐘',  rank:44,  data:[2452.27,2864.04,9586.44,8109.76,2249.16,13489.1] },
+  { name:'林定豐', account:'008609-7', agent:'邱淑纓',  rank:72,  data:[968.97,5398.78,1110.65,0,0,12769.9] },
+  { name:'林春華', account:'006947-0', agent:'陳麗鈴', rank:10,  data:[9179.3,7452.52,11530.7,14004.4,7191.77,12339.7] },
+  { name:'陳麗鈴', account:'980043-6', agent:'陳麗鈴', rank:396, data:[3175.54,6558.83,10706.4,5228.99,5615.75,11766.1] },
+  { name:'黃秋霞', account:'006219-2', agent:'徐玉琴',  rank:313, data:[3537.8,3404.4,5448.95,8831.42,6104.98,11520.2] },
+  { name:'謝盛鵬', account:'008241-5', agent:'陳麗鈴', rank:83,  data:[2434.94,6912.2,2213.25,12318.2,2176.18,11144.1] },
+  { name:'葉佳巡', account:'005184-4', agent:'徐玉琴',  rank:250, data:[1634.8,0,5443.66,8167.48,8634.1,10810.9] },
+  { name:'鄭文功', account:'002862-8', agent:'何如玄',  rank:74,  data:[0,4989.85,2274.62,4019.32,1288.49,10014.9] },
+  { name:'賴國章', account:'007976-1', agent:'何如玄',  rank:391, data:[5937.63,1811.49,2195.31,1963.54,4954.18,9953.4] },
+  { name:'劉子銘', account:'006662-2', agent:'何如玄',  rank:604, data:[0,0,0,1746.03,1663.32,9888.96] },
+  { name:'黃文呈', account:'014828-1', agent:'徐玉琴',  rank:360, data:[1193.04,1760.28,2230.78,7145.56,4230.79,9301.65] },
+  { name:'黃冠霖', account:'009019-3', agent:'陳麗鈴', rank:54,  data:[2371.46,1950.08,1230.34,1804.25,2098.94,8202.06] },
+];
+
+// colour palette
+const PALETTE = [
+  '#38bdf8','#818cf8','#fb7185','#34d399','#fbbf24','#a78bfa',
+  '#f97316','#2dd4bf','#e879f9','#facc15','#60a5fa','#f472b6',
+  '#4ade80','#c084fc','#fb923c','#22d3ee','#a3e635','#f43f5e',
+  '#8b5cf6','#0ea5e9'
+];
+
+const AGENT_COLORS = {
+  '陳麗鈴': '#38bdf8',
+  '何如玄':  '#818cf8',
+  '胡文鐘':  '#34d399',
+  '邱淑纓':  '#fbbf24',
+  '徐玉琴':  '#fb7185',
+  '林玟妏':  '#a78bfa',
+};
+
+function fmt(v) {
+  if (!v || v === 0) return '—';
+  return v.toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+}
+function fmtM(v) {
+  return (v / 100).toFixed(1) + ' 億';
+}
+
+// derived
+RAW.forEach(r => {
+  r.total = r.data.reduce((a, b) => a + b, 0);
+  r.current = r.data[5]; // 11503
+  r.prev = r.data[4];    // 11502
+  r.mom = r.prev > 0 ? ((r.current - r.prev) / r.prev * 100) : null;
+});
+
+// ═══════════════════════════════════════════════════
+// KPI cards
+// ═══════════════════════════════════════════════════
+function buildKPI() {
+  const top1 = RAW[0];
+  const totalCurrent = RAW.reduce((a, r) => a + r.current, 0);
+  const totalHalf    = RAW.reduce((a, r) => a + r.total, 0);
+  const agents = [...new Set(RAW.map(r => r.agent))].length;
+  const avgMoM = RAW.filter(r => r.mom !== null).reduce((a,r)=>a+r.mom,0) / RAW.filter(r => r.mom !== null).length;
+
+  const kpis = [
+    { label: '11503 No.1 客戶', value: top1.name, sub: fmt(top1.current) + ' 萬', color: '#fbbf24' },
+    { label: '11503 合計業績', value: fmt(Math.round(totalCurrent/100)/10) + ' 億', sub: '20大客戶合計', color: '#38bdf8' },
+    { label: '半年累計業績', value: fmt(Math.round(totalHalf/100)/10) + ' 億', sub: '11410~11503', color: '#818cf8' },
+    { label: '涉及營業員', value: agents + ' 位', sub: '負責服務人員', color: '#34d399' },
+    { label: '平均月增率', value: (avgMoM > 0 ? '+' : '') + avgMoM.toFixed(1) + '%', sub: '11502→11503', color: avgMoM >= 0 ? '#34d399' : '#f87171' },
+  ];
+
+  const row = document.getElementById('kpiRow');
+  kpis.forEach(k => {
+    row.innerHTML += `
+      <div class="kpi-card">
+        <div class="label">${k.label}</div>
+        <div class="value" style="color:${k.color}">${k.value}</div>
+        <div class="sub">${k.sub}</div>
+      </div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// Tab switching
+// ═══════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(name === 'bar' ? '橫條' : name === 'line' ? '折線' : name === 'stacked' ? '堆疊' : '明細'))
+      b.classList.add('active');
+  });
+  document.querySelectorAll('.chart-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+// Panel 1 — Horizontal bar charts
+// ═══════════════════════════════════════════════════
+function buildBarCharts() {
+  // 11503 current
+  const sorted = [...RAW].sort((a,b) => b.current - a.current);
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(r => r.name),
+      datasets: [{
+        label: '11503 業績（萬元）',
+        data: sorted.map(r => r.current),
+        backgroundColor: sorted.map(r => AGENT_COLORS[r.agent] || '#64748b'),
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const r = sorted[ctx.dataIndex];
+              const mom = r.mom !== null ? ` | 月增 ${r.mom > 0 ? '+' : ''}${r.mom.toFixed(1)}%` : '';
+              return ` ${fmt(ctx.raw)} 萬（業務：${r.agent}）${mom}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => fmt(v) } },
+        y: { grid: { color: '#1e293b' }, ticks: { color: '#cbd5e1' } }
+      }
+    }
+  });
+
+  // Half-year total
+  const sortedTotal = [...RAW].sort((a,b) => b.total - a.total);
+  new Chart(document.getElementById('totalBarChart'), {
+    type: 'bar',
+    data: {
+      labels: sortedTotal.map(r => r.name),
+      datasets: [{
+        label: '半年累計（萬元）',
+        data: sortedTotal.map(r => r.total),
+        backgroundColor: sortedTotal.map(r => AGENT_COLORS[r.agent] || '#64748b'),
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const r = sortedTotal[ctx.dataIndex];
+              return ` ${fmt(ctx.raw)} 萬（業務：${r.agent}）`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => fmt(v) } },
+        y: { grid: { color: '#1e293b' }, ticks: { color: '#cbd5e1' } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// Panel 2 — Line chart
+// ═══════════════════════════════════════════════════
+let lineChart;
+const activeLines = new Set(RAW.slice(0,6).map(r => r.name));
+
+function buildLineChart() {
+  const grid = document.getElementById('toggleGrid');
+  RAW.forEach((r, i) => {
+    const chip = document.createElement('label');
+    chip.className = 'toggle-chip ' + (activeLines.has(r.name) ? 'on' : 'off');
+    chip.innerHTML = `<input type="checkbox" ${activeLines.has(r.name) ? 'checked' : ''}>
+      <span class="dot" style="background:${PALETTE[i]}"></span>${r.name}`;
+    chip.querySelector('input').addEventListener('change', e => {
+      if (e.target.checked) activeLines.add(r.name); else activeLines.delete(r.name);
+      chip.className = 'toggle-chip ' + (e.target.checked ? 'on' : 'off');
+      updateLineChart();
+    });
+    grid.appendChild(chip);
+  });
+
+  lineChart = new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: { labels: MONTH_LABELS, datasets: buildLineDatasets() },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}：${fmt(ctx.raw)} 萬`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+        y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => fmt(v) } }
+      }
+    }
+  });
+}
+
+function buildLineDatasets() {
+  return RAW.filter(r => activeLines.has(r.name)).map((r, i) => ({
+    label: r.name,
+    data: r.data,
+    borderColor: PALETTE[RAW.indexOf(r)],
+    backgroundColor: PALETTE[RAW.indexOf(r)] + '20',
+    tension: 0.35,
+    fill: false,
+    pointRadius: 4,
+    pointHoverRadius: 7,
+    borderWidth: 2.5,
+  }));
+}
+
+function updateLineChart() {
+  lineChart.data.datasets = buildLineDatasets();
+  lineChart.update();
+}
+
+// ═══════════════════════════════════════════════════
+// Panel 3 — Stacked bar (top 10)
+// ═══════════════════════════════════════════════════
+let stackedChart;
+let agentFilter = null;
+
+function buildStackedChart() {
+  // Agent filter buttons
+  const agents = [...new Set(RAW.map(r => r.agent))];
+  const filterRow = document.getElementById('agentFilter');
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'agent-btn active';
+  allBtn.textContent = '全部';
+  allBtn.style.setProperty('--color', '#38bdf8');
+  allBtn.addEventListener('click', () => {
+    agentFilter = null;
+    document.querySelectorAll('.agent-btn').forEach(b => b.classList.remove('active'));
+    allBtn.classList.add('active');
+    updateStackedChart();
+  });
+  filterRow.appendChild(allBtn);
+
+  agents.forEach(agent => {
+    const btn = document.createElement('button');
+    btn.className = 'agent-btn';
+    btn.textContent = agent;
+    const c = AGENT_COLORS[agent] || '#94a3b8';
+    btn.style.setProperty('--color', c);
+    btn.addEventListener('click', () => {
+      agentFilter = agent;
+      document.querySelectorAll('.agent-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateStackedChart();
+    });
+    filterRow.appendChild(btn);
+  });
+
+  stackedChart = new Chart(document.getElementById('stackedChart'), {
+    type: 'bar',
+    data: buildStackedData(),
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#94a3b8', boxWidth: 12, padding: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}：${fmt(ctx.raw)} 萬`
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+        y: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', callback: v => fmt(v) } }
+      }
+    }
+  });
+}
+
+function buildStackedData() {
+  const top10 = agentFilter
+    ? RAW.filter(r => r.agent === agentFilter).slice(0,10)
+    : RAW.slice(0,10);
+
+  return {
+    labels: MONTH_LABELS,
+    datasets: top10.map((r, i) => ({
+      label: r.name,
+      data: r.data,
+      backgroundColor: PALETTE[i],
+      stack: 'stack',
+    }))
+  };
+}
+
+function updateStackedChart() {
+  stackedChart.data = buildStackedData();
+  stackedChart.update();
+}
+
+// ═══════════════════════════════════════════════════
+// Panel 4 — Table
+// ═══════════════════════════════════════════════════
+function buildTable() {
+  const maxTotal = Math.max(...RAW.map(r => r.total));
+
+  let html = `<thead><tr>
+    <th>#</th><th>客戶姓名</th><th>負責業務</th>`;
+  MONTH_LABELS.forEach(m => html += `<th>${m}</th>`);
+  html += `<th>半年合計</th><th>月增率</th></tr></thead><tbody>`;
+
+  RAW.forEach((r, i) => {
+    const momStr = r.mom !== null
+      ? `<span class="${r.mom >= 10 ? 'trend-up' : r.mom <= -10 ? 'trend-down' : 'trend-zero'}">${r.mom > 0 ? '▲' : r.mom < 0 ? '▼' : '─'} ${Math.abs(r.mom).toFixed(1)}%</span>`
+      : '<span class="trend-zero">—</span>';
+
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+    const barW = Math.round(r.total / maxTotal * 60);
+
+    html += `<tr>
+      <td><span class="rank-badge ${rankClass}">${i+1}</span></td>
+      <td style="color:${PALETTE[i]};font-weight:600">${r.name}</td>
+      <td><span style="color:${AGENT_COLORS[r.agent] || '#94a3b8'}">${r.agent}</span></td>`;
+
+    r.data.forEach(v => {
+      html += `<td style="color:${v === 0 ? '#475569' : '#e2e8f0'}">${v === 0 ? '—' : fmt(v)}</td>`;
+    });
+
+    html += `<td style="color:#fbbf24;font-weight:600">${fmt(r.total)}<span class="mini-bar" style="width:${barW}px"></span></td>
+      <td>${momStr}</td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  document.getElementById('dataTable').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════
+buildKPI();
+buildBarCharts();
+buildLineChart();
+buildStackedChart();
+buildTable();
+
+// Fix tab buttons text matching
+document.querySelectorAll('.tab-btn').forEach(b => {
+  b.onclick = null;
+});
+const panels = ['bar','line','stacked','table'];
+document.querySelectorAll('.tab-btn').forEach((b, i) => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.chart-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + panels[i]).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
